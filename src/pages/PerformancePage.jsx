@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import {
   Settings, Upload, TableProperties, BarChart3, Plus, Trash2, AlertCircle,
-  CheckCircle2, Download, Calculator, DatabaseZap
+  CheckCircle2, Download, Calculator, DatabaseZap, BookmarkPlus
 } from 'lucide-react';
 import usePortfolioStore from '../store/usePortfolioStore';
 import CsvUploader from '../components/CsvUploader';
@@ -10,7 +10,7 @@ import AiAnalyst from '../components/AiAnalyst';
 import { parseAssetsCSV, parseCashflowsCSV } from '../utils/csvParser';
 import { modifiedDietz, computeCashflowWeights, computePortfolioReturns } from '../utils/modifiedDietz';
 import { formatPct, formatSignedPct, formatNumber, toFloat } from '../utils/formatters';
-import { generatePerformanceCommentary } from '../services/geminiService';
+import { generatePerformanceCommentary } from '../services/aiService';
 
 const TABS = [
   { id: 'settings', label: 'Global Settings', icon: Settings },
@@ -26,6 +26,7 @@ export default function PerformancePage() {
     assets, setAssets, addAsset, updateAsset, removeAsset,
     cashflows, setCashflows,
     setPerformanceResults,
+    savePeriodSnapshot, periods,
   } = usePortfolioStore();
 
   // ── CSV Upload State ──
@@ -135,27 +136,27 @@ export default function PerformancePage() {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Performance Measurement</h1>
-          <p className="text-sm text-slate-500 mt-1">Modified Dietz Method — One-Period Time-Weighted Return</p>
+          <h1 className="text-2xl font-bold text-white">Performance Measurement</h1>
+          <p className="text-sm text-slate-400 mt-1">Modified Dietz Method — One-Period Time-Weighted Return</p>
         </div>
         <button
           onClick={handleSeedData}
-          className="flex items-center gap-1.5 text-sm font-medium text-amber-700 hover:text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-200 px-3 py-2 rounded-lg transition-colors shrink-0"
+          className="flex items-center gap-1.5 text-sm font-medium text-[#d4a843] hover:text-amber-300 bg-[#d4a843]/10 hover:bg-[#d4a843]/20 border border-[#d4a843]/30 px-3 py-2 rounded-lg transition-colors shrink-0"
         >
           <DatabaseZap className="w-4 h-4" /> Load Sample Data
         </button>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 bg-slate-100 rounded-xl p-1">
+      <div className="flex gap-1 bg-slate-800/50 rounded-xl p-1">
         {TABS.map(({ id, label, icon: Icon }) => (
           <button
             key={id}
             onClick={() => setActiveTab(id)}
             className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors flex-1 justify-center ${
               activeTab === id
-                ? 'bg-white text-blue-600 shadow-sm'
-                : 'text-slate-500 hover:text-slate-700'
+                ? 'bg-slate-700 text-[#d4a843] shadow-sm'
+                : 'text-slate-400 hover:text-white'
             }`}
           >
             <Icon className="w-4 h-4" />
@@ -168,33 +169,33 @@ export default function PerformancePage() {
       {activeTab === 'settings' && (
         <div className="space-y-6">
           {/* Period Selection */}
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-            <h2 className="text-lg font-semibold text-slate-800 mb-4">Evaluation Period</h2>
+          <div className="bg-[#1e293b] rounded-2xl shadow-sm border border-slate-700 p-6">
+            <h2 className="text-lg font-semibold text-white mb-4">Evaluation Period</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-slate-600 mb-1">Start Date</label>
+                <label className="block text-sm font-medium text-slate-300 mb-1">Start Date</label>
                 <input
                   type="date"
                   value={startDate ? startDate.toISOString().split('T')[0] : ''}
                   onChange={(e) => setDates(e.target.value ? new Date(e.target.value + 'T00:00:00') : null, endDate)}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  className="w-full px-3 py-2 bg-slate-900 border border-slate-600 text-white rounded-lg focus:ring-2 focus:ring-[#d4a843] focus:border-[#d4a843] outline-none"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-600 mb-1">End Date</label>
+                <label className="block text-sm font-medium text-slate-300 mb-1">End Date</label>
                 <input
                   type="date"
                   value={endDate ? endDate.toISOString().split('T')[0] : ''}
                   onChange={(e) => setDates(startDate, e.target.value ? new Date(e.target.value + 'T00:00:00') : null)}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  className="w-full px-3 py-2 bg-slate-900 border border-slate-600 text-white rounded-lg focus:ring-2 focus:ring-[#d4a843] focus:border-[#d4a843] outline-none"
                 />
               </div>
             </div>
           </div>
 
           {/* Asset Classes Upload */}
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-4">
-            <h2 className="text-lg font-semibold text-slate-800">Asset Classes & Market Values</h2>
+          <div className="bg-[#1e293b] rounded-2xl shadow-sm border border-slate-700 p-6 space-y-4">
+            <h2 className="text-lg font-semibold text-white">Asset Classes & Market Values</h2>
             <CsvUploader
               label="Upload Assets CSV"
               description="Columns: Asset Class, Beginning MV, Ending MV (flexible naming supported)"
@@ -203,16 +204,16 @@ export default function PerformancePage() {
               success={assetSuccess}
             />
 
-            <div className="flex items-center gap-2 text-sm text-slate-500">
-              <div className="flex-1 h-px bg-slate-200" />
+            <div className="flex items-center gap-2 text-sm text-slate-400">
+              <div className="flex-1 h-px bg-slate-700" />
               <span>or enter manually</span>
-              <div className="flex-1 h-px bg-slate-200" />
+              <div className="flex-1 h-px bg-slate-700" />
             </div>
 
             {/* Manual Data Entry Table */}
             <div className="overflow-x-auto">
               <table className="w-full text-sm text-left">
-                <thead className="bg-slate-50 text-slate-500 font-medium border-b border-slate-200">
+                <thead className="bg-slate-800/50 text-slate-400 font-medium border-b border-slate-700">
                   <tr>
                     <th className="px-3 py-2">Asset Class</th>
                     <th className="px-3 py-2 text-right">Beginning MV</th>
@@ -220,7 +221,7 @@ export default function PerformancePage() {
                     <th className="px-3 py-2 w-12"></th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-slate-700/50">
                   {assets.map((a, i) => (
                     <tr key={i}>
                       <td className="px-3 py-1.5">
@@ -228,29 +229,27 @@ export default function PerformancePage() {
                           type="text"
                           value={a.name}
                           onChange={(e) => updateAsset(i, { name: e.target.value })}
-                          className="w-full px-2 py-1.5 border border-slate-200 rounded-md focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                          className="w-full px-2 py-1.5 bg-slate-900 border border-slate-600 text-white rounded-md focus:ring-2 focus:ring-[#d4a843] outline-none text-sm"
                         />
                       </td>
                       <td className="px-3 py-1.5">
                         <input
-                          type="number"
-                          step="0.01"
-                          value={a.beginningValue}
+                          type="text"
+                          value={formatNumber(a.beginningValue, 0)}
                           onChange={(e) => updateAsset(i, { beginningValue: toFloat(e.target.value) || 0 })}
-                          className="w-full px-2 py-1.5 border border-slate-200 rounded-md text-right focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                          className="w-full px-2 py-1.5 bg-slate-900 border border-slate-600 text-white rounded-md text-right focus:ring-2 focus:ring-[#d4a843] outline-none text-sm"
                         />
                       </td>
                       <td className="px-3 py-1.5">
                         <input
-                          type="number"
-                          step="0.01"
-                          value={a.endingValue}
+                          type="text"
+                          value={formatNumber(a.endingValue, 0)}
                           onChange={(e) => updateAsset(i, { endingValue: toFloat(e.target.value) || 0 })}
-                          className="w-full px-2 py-1.5 border border-slate-200 rounded-md text-right focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                          className="w-full px-2 py-1.5 bg-slate-900 border border-slate-600 text-white rounded-md text-right focus:ring-2 focus:ring-[#d4a843] outline-none text-sm"
                         />
                       </td>
                       <td className="px-3 py-1.5 text-center">
-                        <button onClick={() => removeAsset(i)} className="text-slate-400 hover:text-red-500 p-1 rounded hover:bg-red-50">
+                        <button onClick={() => removeAsset(i)} className="text-slate-400 hover:text-rose-400 p-1 rounded hover:bg-rose-900/30">
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </td>
@@ -261,7 +260,7 @@ export default function PerformancePage() {
             </div>
             <button
               onClick={handleAddRow}
-              className="flex items-center gap-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors"
+              className="flex items-center gap-1.5 text-sm font-medium text-[#d4a843] hover:text-[#d4a843] bg-[#d4a843]/10 hover:bg-[#d4a843]/20 px-3 py-1.5 rounded-lg transition-colors"
             >
               <Plus className="w-4 h-4" /> Add Asset Class
             </button>
@@ -272,12 +271,12 @@ export default function PerformancePage() {
       {/* ─── Tab 2: Cashflows Upload ────────────────────── */}
       {activeTab === 'cashflows' && (
         <div className="space-y-6">
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-4">
+          <div className="bg-[#1e293b] rounded-2xl shadow-sm border border-slate-700 p-6 space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-slate-800">Transaction Cashflows</h2>
+              <h2 className="text-lg font-semibold text-white">Transaction Cashflows</h2>
               <button
                 onClick={downloadTemplate}
-                className="flex items-center gap-1.5 text-sm text-slate-600 hover:text-blue-600 bg-slate-100 hover:bg-blue-50 px-3 py-1.5 rounded-lg transition-colors"
+                className="flex items-center gap-1.5 text-sm text-slate-300 hover:text-[#d4a843] bg-slate-700 hover:bg-[#d4a843]/10 px-3 py-1.5 rounded-lg transition-colors"
               >
                 <Download className="w-4 h-4" /> Download Template
               </button>
@@ -292,14 +291,14 @@ export default function PerformancePage() {
           </div>
 
           {cashflows.length > 0 && (
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-              <div className="p-5 border-b border-slate-200 bg-slate-50/50 flex items-center gap-2">
+            <div className="bg-[#1e293b] rounded-2xl shadow-sm border border-slate-700 overflow-hidden">
+              <div className="p-5 border-b border-slate-700 bg-slate-800/50 flex items-center gap-2">
                 <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-                <h3 className="font-semibold text-slate-800">{cashflows.length} Cashflows Loaded</h3>
+                <h3 className="font-semibold text-white">{cashflows.length} Cashflows Loaded</h3>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm text-left">
-                  <thead className="bg-slate-50 text-slate-500 font-medium border-b border-slate-200">
+                  <thead className="bg-slate-800/50 text-slate-400 font-medium border-b border-slate-700">
                     <tr>
                       <th className="px-4 py-2">Date</th>
                       <th className="px-4 py-2">Type</th>
@@ -308,18 +307,18 @@ export default function PerformancePage() {
                       <th className="px-4 py-2">Details</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100">
+                  <tbody className="divide-y divide-slate-700/50">
                     {cashflows.map((cf, i) => (
-                      <tr key={i} className="hover:bg-slate-50/50">
+                      <tr key={i} className="hover:bg-slate-700/30">
                         <td className="px-4 py-2">{cf.date.toLocaleDateString()}</td>
                         <td className="px-4 py-2">
-                          <span className={`px-2 py-0.5 rounded text-xs font-medium ${cf.type === 'INFLOW' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
+                          <span className={`px-2 py-0.5 rounded text-xs font-medium ${cf.type === 'INFLOW' ? 'bg-emerald-900/40 text-emerald-400' : 'bg-rose-900/40 text-rose-400'}`}>
                             {cf.type}
                           </span>
                         </td>
                         <td className="px-4 py-2">{cf.assetClass}</td>
                         <td className="px-4 py-2 text-right font-mono">{formatNumber(cf.rawAmount)}</td>
-                        <td className="px-4 py-2 text-slate-500 truncate max-w-xs">{cf.details}</td>
+                        <td className="px-4 py-2 text-slate-400 truncate max-w-xs">{cf.details}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -334,25 +333,25 @@ export default function PerformancePage() {
       {activeTab === 'adjusted' && (
         <div className="space-y-6">
           {!startDate || !endDate ? (
-            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3 text-amber-800">
+            <div className="bg-amber-900/30 border border-amber-700/50 rounded-xl p-4 flex items-start gap-3 text-amber-300">
               <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
               <p className="text-sm">Set the evaluation period in Global Settings first.</p>
             </div>
           ) : adjustedFlows.length === 0 ? (
-            <div className="bg-slate-100 rounded-xl p-8 text-center text-slate-500">
+            <div className="bg-slate-800/50 rounded-xl p-8 text-center text-slate-400">
               <p>No cashflows within the selected period. Upload cashflows first.</p>
             </div>
           ) : (
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-              <div className="p-5 border-b border-slate-200 bg-slate-50/50">
-                <h2 className="text-lg font-semibold text-slate-800">Time-Weighted Cashflows</h2>
-                <p className="text-sm text-slate-500 mt-1">
-                  Weight formula: <code className="bg-slate-100 px-1.5 py-0.5 rounded text-xs text-blue-600">w = (T1 - Ti) / (T1 - T0)</code>
+            <div className="bg-[#1e293b] rounded-2xl shadow-sm border border-slate-700 overflow-hidden">
+              <div className="p-5 border-b border-slate-700 bg-slate-800/50">
+                <h2 className="text-lg font-semibold text-white">Time-Weighted Cashflows</h2>
+                <p className="text-sm text-slate-400 mt-1">
+                  Weight formula: <code className="bg-slate-800 px-1.5 py-0.5 rounded text-xs text-[#d4a843]">w = (T1 - Ti) / (T1 - T0)</code>
                 </p>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm text-left">
-                  <thead className="bg-slate-50 text-slate-500 font-medium border-b border-slate-200">
+                  <thead className="bg-slate-800/50 text-slate-400 font-medium border-b border-slate-700">
                     <tr>
                       <th className="px-4 py-2">Date</th>
                       <th className="px-4 py-2">Type</th>
@@ -362,18 +361,18 @@ export default function PerformancePage() {
                       <th className="px-4 py-2 text-right">Weighted Amount</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100 font-mono">
+                  <tbody className="divide-y divide-slate-700/50 font-mono">
                     {adjustedFlows.map((cf, i) => (
-                      <tr key={i} className="hover:bg-slate-50/50">
+                      <tr key={i} className="hover:bg-slate-700/30">
                         <td className="px-4 py-2 font-sans">{cf.date.toLocaleDateString()}</td>
                         <td className="px-4 py-2 font-sans">
-                          <span className={`px-2 py-0.5 rounded text-xs font-medium ${cf.type === 'INFLOW' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
+                          <span className={`px-2 py-0.5 rounded text-xs font-medium ${cf.type === 'INFLOW' ? 'bg-emerald-900/40 text-emerald-400' : 'bg-rose-900/40 text-rose-400'}`}>
                             {cf.type}
                           </span>
                         </td>
                         <td className="px-4 py-2 font-sans">{cf.assetClass}</td>
                         <td className="px-4 py-2 text-right">{formatNumber(cf.rawAmount)}</td>
-                        <td className="px-4 py-2 text-right text-blue-600">{cf.weight.toFixed(4)}</td>
+                        <td className="px-4 py-2 text-right text-[#d4a843]">{cf.weight.toFixed(4)}</td>
                         <td className="px-4 py-2 text-right">{formatNumber(cf.weightedAmount)}</td>
                       </tr>
                     ))}
@@ -390,20 +389,20 @@ export default function PerformancePage() {
         <div className="space-y-6">
           {/* Validation */}
           {(!startDate || !endDate) && (
-            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3 text-amber-800">
+            <div className="bg-amber-900/30 border border-amber-700/50 rounded-xl p-4 flex items-start gap-3 text-amber-300">
               <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
               <p className="text-sm">Set the evaluation period in Global Settings first.</p>
             </div>
           )}
           {assets.length === 0 && (
-            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3 text-amber-800">
+            <div className="bg-amber-900/30 border border-amber-700/50 rounded-xl p-4 flex items-start gap-3 text-amber-300">
               <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
               <p className="text-sm">Add at least one asset class in Global Settings.</p>
             </div>
           )}
 
           {results?.error && (
-            <div className="bg-rose-50 border border-rose-200 rounded-xl p-4 flex items-start gap-3 text-rose-800">
+            <div className="bg-rose-900/30 border border-rose-700/50 rounded-xl p-4 flex items-start gap-3 text-rose-400">
               <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
               <p className="text-sm">{results.error}</p>
             </div>
@@ -413,7 +412,7 @@ export default function PerformancePage() {
             <>
               {/* Issues */}
               {results.issues?.length > 0 && (
-                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-amber-800 text-sm space-y-1">
+                <div className="bg-amber-900/30 border border-amber-700/50 rounded-xl p-4 text-amber-300 text-sm space-y-1">
                   <p className="font-semibold">Calculation Notes:</p>
                   {results.issues.map((iss, i) => (
                     <p key={i} className="flex items-start gap-2">
@@ -438,17 +437,33 @@ export default function PerformancePage() {
                 <KpiCard label="Asset Classes" value={String(results.assetResults.length)} icon={Calculator} />
               </div>
 
+              {/* Save Period to Report */}
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={savePeriodSnapshot}
+                  className="flex items-center gap-2 text-sm font-medium text-[#d4a843] bg-[#d4a843]/10 hover:bg-[#d4a843]/20 border border-[#d4a843]/30 px-4 py-2 rounded-lg transition-colors"
+                >
+                  <BookmarkPlus className="w-4 h-4" />
+                  Save Period to Report
+                </button>
+                {periods.length > 0 && (
+                  <span className="text-xs text-slate-400">
+                    {periods.length} period{periods.length !== 1 ? 's' : ''} saved
+                  </span>
+                )}
+              </div>
+
               {/* Results Table */}
-              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                <div className="p-5 border-b border-slate-200 bg-slate-50/50">
-                  <h2 className="text-lg font-semibold flex items-center gap-2 text-slate-800">
-                    <Calculator className="w-5 h-5 text-blue-500" />
+              <div className="bg-[#1e293b] rounded-2xl shadow-sm border border-slate-700 overflow-hidden">
+                <div className="p-5 border-b border-slate-700 bg-slate-800/50">
+                  <h2 className="text-lg font-semibold flex items-center gap-2 text-white">
+                    <Calculator className="w-5 h-5 text-[#d4a843]" />
                     Per-Asset Modified Dietz Returns
                   </h2>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm text-left">
-                    <thead className="bg-slate-50 text-slate-500 font-medium border-b border-slate-200">
+                    <thead className="bg-slate-800/50 text-slate-400 font-medium border-b border-slate-700">
                       <tr>
                         <th className="px-4 py-3">Asset Class</th>
                         <th className="px-4 py-3 text-right">Beginning MV</th>
@@ -459,35 +474,35 @@ export default function PerformancePage() {
                         <th className="px-4 py-3 text-right font-bold">Contribution</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100">
+                    <tbody className="divide-y divide-slate-700/50">
                       {results.assetResults.map((a, i) => (
-                        <tr key={i} className="hover:bg-slate-50/50">
-                          <td className="px-4 py-3 font-medium text-slate-700">{a.name}</td>
+                        <tr key={i} className="hover:bg-slate-700/30">
+                          <td className="px-4 py-3 font-medium text-slate-200">{a.name}</td>
                           <td className="px-4 py-3 text-right font-mono">{formatNumber(a.beginningValue)}</td>
                           <td className="px-4 py-3 text-right font-mono">{formatNumber(a.endingValue)}</td>
                           <td className="px-4 py-3 text-right font-mono">{formatPct(a.weight)}</td>
-                          <td className={`px-4 py-3 text-right font-mono ${a.periodReturn >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                          <td className={`px-4 py-3 text-right font-mono ${a.periodReturn >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                             {formatSignedPct(a.periodReturn)}
                           </td>
-                          <td className={`px-4 py-3 text-right font-mono ${a.annualizedReturn >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                          <td className={`px-4 py-3 text-right font-mono ${a.annualizedReturn >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                             {formatSignedPct(a.annualizedReturn)}
                           </td>
-                          <td className={`px-4 py-3 text-right font-mono font-bold ${a.contribution >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
+                          <td className={`px-4 py-3 text-right font-mono font-bold ${a.contribution >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                             {formatSignedPct(a.contribution)}
                           </td>
                         </tr>
                       ))}
                     </tbody>
-                    <tfoot className="bg-blue-50/50 font-bold border-t border-slate-200">
+                    <tfoot className="bg-[#d4a843]/10 font-bold border-t border-slate-700">
                       <tr>
-                        <td className="px-4 py-4 text-right text-slate-700">Portfolio Total</td>
+                        <td className="px-4 py-4 text-right text-slate-200">Portfolio Total</td>
                         <td className="px-4 py-4 text-right font-mono">{formatNumber(results.portfolio.beginningValue)}</td>
                         <td className="px-4 py-4 text-right font-mono">{formatNumber(results.portfolio.endingValue)}</td>
                         <td className="px-4 py-4 text-right font-mono">100.00%</td>
-                        <td className={`px-4 py-4 text-right font-mono text-lg ${results.portfolio.periodReturn >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
+                        <td className={`px-4 py-4 text-right font-mono text-lg ${results.portfolio.periodReturn >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                           {formatSignedPct(results.portfolio.periodReturn)}
                         </td>
-                        <td className={`px-4 py-4 text-right font-mono ${results.portfolio.annualizedReturn >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
+                        <td className={`px-4 py-4 text-right font-mono ${results.portfolio.annualizedReturn >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                           {formatSignedPct(results.portfolio.annualizedReturn)}
                         </td>
                         <td></td>

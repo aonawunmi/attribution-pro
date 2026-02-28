@@ -46,6 +46,39 @@ const usePortfolioStore = create((set, get) => ({
 
   setPerformanceResults: (results) => set({ performanceResults: results }),
 
+  // ── Saved Periods (for multi-period report) ────────────────
+  periods: [],
+
+  savePeriodSnapshot: () => {
+    const { startDate, endDate, assets, cashflows, performanceResults } = get();
+    if (!performanceResults || !startDate || !endDate) return;
+
+    const id = `${startDate.getTime()}_${endDate.getTime()}`;
+    const label = `${startDate.toLocaleDateString()} – ${endDate.toLocaleDateString()}`;
+
+    const snapshot = {
+      id,
+      label,
+      startDate: new Date(startDate),
+      endDate: new Date(endDate),
+      assets: assets.map((a) => ({ ...a })),
+      cashflows: cashflows.map((c) => ({ ...c })),
+      performanceResults: JSON.parse(JSON.stringify(performanceResults)),
+      savedAt: new Date(),
+    };
+
+    set((state) => ({
+      periods: [...state.periods.filter((p) => p.id !== id), snapshot],
+    }));
+  },
+
+  removePeriod: (id) =>
+    set((state) => ({
+      periods: state.periods.filter((p) => p.id !== id),
+    })),
+
+  clearPeriods: () => set({ periods: [] }),
+
   // ── Helper: convert performance results to attribution inputs ──
   getPerformanceAsAttributionInput: () => {
     const { performanceResults } = get();
