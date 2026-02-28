@@ -291,40 +291,36 @@ export default function AttributionPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
           <h2 className="text-lg font-semibold mb-4 text-slate-800">Effects by Asset Class (%)</h2>
-          <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} tickFormatter={(v) => `${v}%`} />
-                <Tooltip content={<CustomTooltip />} />
-                <Legend iconType="circle" wrapperStyle={{ fontSize: '14px', paddingTop: '10px' }} />
-                <ReferenceLine y={0} stroke="#94a3b8" />
-                <Bar dataKey="Allocation" fill={COLORS.allocation} radius={[4, 4, 0, 0]} maxBarSize={50} />
-                <Bar dataKey="Selection" fill={COLORS.selection} radius={[4, 4, 0, 0]} maxBarSize={50} />
-                <Bar dataKey="Interaction" fill={COLORS.interaction} radius={[4, 4, 0, 0]} maxBarSize={50} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={chartData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+              <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
+              <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} tickFormatter={(v) => `${v}%`} />
+              <Tooltip content={<CustomTooltip />} />
+              <Legend iconType="circle" wrapperStyle={{ fontSize: '14px', paddingTop: '10px' }} />
+              <ReferenceLine y={0} stroke="#94a3b8" />
+              <Bar dataKey="Allocation" fill={COLORS.allocation} radius={[4, 4, 0, 0]} maxBarSize={50} />
+              <Bar dataKey="Selection" fill={COLORS.selection} radius={[4, 4, 0, 0]} maxBarSize={50} />
+              <Bar dataKey="Interaction" fill={COLORS.interaction} radius={[4, 4, 0, 0]} maxBarSize={50} />
+            </BarChart>
+          </ResponsiveContainer>
         </div>
         <div className="lg:col-span-1 bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
           <h2 className="text-lg font-semibold mb-4 text-slate-800">Total Active Summary</h2>
-          <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={totalChartData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} tickFormatter={(v) => `${v}%`} />
-                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'transparent' }} />
-                <ReferenceLine y={0} stroke="#94a3b8" />
-                <Bar dataKey="value" radius={[4, 4, 0, 0]} maxBarSize={60}>
-                  {totalChartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.fill} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={totalChartData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+              <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
+              <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} tickFormatter={(v) => `${v}%`} />
+              <Tooltip content={<CustomTooltip />} cursor={{ fill: 'transparent' }} />
+              <ReferenceLine y={0} stroke="#94a3b8" />
+              <Bar dataKey="value" radius={[4, 4, 0, 0]} maxBarSize={60}>
+                {totalChartData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.fill} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
         </div>
       </div>
 

@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import {
   Settings, Upload, TableProperties, BarChart3, Plus, Trash2, AlertCircle,
   CheckCircle2, Download, Calculator, DatabaseZap
@@ -112,7 +112,7 @@ export default function PerformancePage() {
   }, [assets, cashflows, startDate, endDate]);
 
   // Save results to store when computed
-  useMemo(() => {
+  useEffect(() => {
     if (results && !results.error) {
       setPerformanceResults(results);
     }
