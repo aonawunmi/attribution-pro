@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback } from 'react';
 import {
   Settings, Upload, TableProperties, BarChart3, Plus, Trash2, AlertCircle,
-  CheckCircle2, Download, Calculator
+  CheckCircle2, Download, Calculator, DatabaseZap
 } from 'lucide-react';
 import usePortfolioStore from '../store/usePortfolioStore';
 import CsvUploader from '../components/CsvUploader';
@@ -63,6 +63,27 @@ export default function PerformancePage() {
     addAsset({ name: `Asset ${assets.length + 1}`, beginningValue: 0, endingValue: 0 });
   };
 
+  // ── Seed sample data for testing ──
+  const handleSeedData = () => {
+    setDates(new Date('2025-01-01T00:00:00'), new Date('2025-06-30T00:00:00'));
+    setAssets([
+      { name: 'Equities', beginningValue: 500000, endingValue: 560000 },
+      { name: 'Fixed Income', beginningValue: 300000, endingValue: 312000 },
+      { name: 'Real Estate', beginningValue: 150000, endingValue: 157500 },
+      { name: 'Cash', beginningValue: 50000, endingValue: 50500 },
+    ]);
+    setCashflows([
+      { date: new Date('2025-02-15'), amount: 25000, assetClass: 'Equities', details: 'Quarterly contribution', type: 'INFLOW', rawAmount: 25000 },
+      { date: new Date('2025-03-01'), amount: 10000, assetClass: 'Fixed Income', details: 'Bond reinvestment', type: 'INFLOW', rawAmount: 10000 },
+      { date: new Date('2025-04-10'), amount: -15000, assetClass: 'Equities', details: 'Partial withdrawal', type: 'OUTFLOW', rawAmount: 15000 },
+      { date: new Date('2025-05-01'), amount: 5000, assetClass: 'Real Estate', details: 'REIT dividend reinvest', type: 'INFLOW', rawAmount: 5000 },
+      { date: new Date('2025-05-20'), amount: -8000, assetClass: 'Cash', details: 'Operating expenses', type: 'OUTFLOW', rawAmount: 8000 },
+      { date: new Date('2025-06-15'), amount: 20000, assetClass: 'Fixed Income', details: 'Mid-year allocation', type: 'INFLOW', rawAmount: 20000 },
+    ]);
+    setAssetSuccess(true);
+    setCfSuccess(true);
+  };
+
   // ── Adjusted Cashflows (with Modified Dietz weights) ──
   const adjustedFlows = useMemo(() => {
     if (!startDate || !endDate || cashflows.length === 0) return [];
@@ -112,9 +133,17 @@ export default function PerformancePage() {
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">Performance Measurement</h1>
-        <p className="text-sm text-slate-500 mt-1">Modified Dietz Method — One-Period Time-Weighted Return</p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Performance Measurement</h1>
+          <p className="text-sm text-slate-500 mt-1">Modified Dietz Method — One-Period Time-Weighted Return</p>
+        </div>
+        <button
+          onClick={handleSeedData}
+          className="flex items-center gap-1.5 text-sm font-medium text-amber-700 hover:text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-200 px-3 py-2 rounded-lg transition-colors shrink-0"
+        >
+          <DatabaseZap className="w-4 h-4" /> Load Sample Data
+        </button>
       </div>
 
       {/* Tabs */}
